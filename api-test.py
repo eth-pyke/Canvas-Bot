@@ -1,13 +1,10 @@
-from canvasapi import Canvas
+import requests
 import discord
 
-API_URL = "https://canvas.uw.edu/"
+API_URL = "https://canvas.uw.edu"
 API_KEY = "10~xLbBIb7Mw9HOU5ce3ihhXTl2A8nLHqEbppHxfZnsGO2zda3IwtES54Sx1qStOHwy"
+headers = {'Authorization': 'Bearer %s' % API_KEY}
 
-canvas = Canvas(API_URL, API_KEY)
-user = canvas.get_user("self")
-user_calendar = user.get_courses
-
-print(user_calendar)
-
-#10~xLbBIb7Mw9HOU5ce3ihhXTl2A8nLHqEbppHxfZnsGO2zda3IwtES54Sx1qStOHwy
+upcoming_events = requests.get("https://canvas.uw.edu/api/v1/users/self/upcoming_events", headers=headers).json()
+for event in upcoming_events:
+    print(event["title"])
