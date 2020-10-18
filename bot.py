@@ -1,4 +1,3 @@
-# bot.py
 import os
 import random
 import sqlite3
@@ -9,6 +8,7 @@ from discord.ext import commands
 from canvas import getCourses, getEvents
 import asyncio
 from datetime import datetime
+import dateutil.parser
 import discord
 intents = discord.Intents.all()
 
@@ -65,11 +65,31 @@ async def on_member_remove(member):
 #   temp = cursor.execute("SELECT * FROM Members").fetchall()
 #   print(temp)
 
+# @bot.command(name='createrole', help='Give yourself the Student Role')
+# async def createrole(ctx, role: str):
+#   await ctx.guild.create_role(name=role)
+
+# @bot.command(case_insensitive = True, aliases = ["remind", "remindme", "remind_me"])
+async def reminder(ctx, time, reminder, ogDate):
+    date = datetime.fromtimestamp(time).strftime("%d days, %H hours, and %M minutes")
+    await ctx.author.send(f"Alright, I will remind you about {reminder} that is on {ogDate} in {date}.")
+    await asyncio.sleep(time)
+    await ctx.author.send(f"Hi, you asked me to remind you about {reminder} {date} ago.")
+    return
+
 @bot.command(name='optin', help='Opt-In for schedule reminders.')
 async def optin(ctx):
   cursor = connection.cursor()
   cursor.execute(f"UPDATE Members SET optin = 1 WHERE name = '{ctx.author}' AND sid = {ctx.author.guild.id}")
-  await ctx.author.send('You are signed up for reminders!')
+  eventList = getEvents()
+  reminderList = []
+  for event in eventList:
+    if ('OH' in event['name'] or 'Office Hours' in event['name']):
+      time = dateutil.parser.parse(event['start_time'])
+      seconds = time.timestamp()
+      timeDiff = seconds - datetime.now().timestamp()
+      reminderList.append(reminder(ctx, timeDiff, event['name'], event['start_time']))
+  await asyncio.gather(*reminderList)
 
 @bot.command(name='showCourses', help="Show the courses that you are in")
 async def showcourse(ctx):
@@ -97,38 +117,6 @@ async def showEvent(ctx, input=None):
         res += "- " + event['name'] + " " + event['start_time'] + "\n"
     embed = discord.Embed(color=0x55a7f7)
     embed.add_field(name="Upcoming Events", value=res, inline=False)
-    await ctx.send(embed=embed)
-
-@bot.command(case_insensitive = True, aliases = ["remind", "remindme", "remind_me"])
-async def reminder(ctx, time, reminder):
-    print(time)
-    print(reminder)
-    embed = discord.Embed(color=0x55a7f7, timestamp=datetime.now())
-    seconds = 0
-    if reminder is None:
-        embed.add_field(name='Warning', value='Please specify what do you want me to remind you about.') # Error message
-    if time.lower().endswith("d"):
-        seconds += int(time[:-1]) * 60 * 60 * 24
-        counter = f"{seconds // 60 // 60 // 24} days"
-    if time.lower().endswith("h"):
-        seconds += int(time[:-1]) * 60 * 60
-        counter = f"{seconds // 60 // 60} hours"
-    elif time.lower().endswith("m"):
-        seconds += int(time[:-1]) * 60
-        counter = f"{seconds // 60} minutes"
-    elif time.lower().endswith("s"):
-        seconds += int(time[:-1])
-        counter = f"{seconds} seconds"
-    if seconds == 0:
-        embed.add_field(name='Warning',
-                        value='Please specify a proper duration, send `reminder_help` for more information.')
-    elif seconds > 7776000:
-        embed.add_field(name='Warning', value='You have specified a too long duration!\nMaximum duration is 90 days.')
-    else:
-        await ctx.send(f"Alright, I will remind you about {reminder} in {counter}.")
-        await asyncio.sleep(seconds)
-        await ctx.send(f"Hi, you asked me to remind you about {reminder} {counter} ago.")
-        return
     await ctx.send(embed=embed)
 
 # Incorrect role error message
