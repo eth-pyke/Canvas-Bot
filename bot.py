@@ -1,6 +1,9 @@
 # bot.py
 import os
 import random
+import sqlite3
+import discord
+
 from dotenv import load_dotenv
 from discord.ext import commands
 from canvas import getCourses, getEvents
@@ -14,7 +17,7 @@ bot = commands.Bot(command_prefix='c!')
 
 @bot.event
 async def on_ready():
-    print(f'{bot.user.name} has connected to Discord!')
+  print(f'{bot.user.name} has connected to Discord!')
 
 @bot.command(name='david', help='Responds with whether or not you are better than david')
 async def david(ctx):
@@ -25,6 +28,11 @@ async def david(ctx):
 async def createrole(ctx, role: str):
   await ctx.guild.create_role(name=role)
 
+@bot.command(name='optin', help='Opt-In for schedule reminders.')
+async def optin(ctx):
+  await ctx.author.send('You are signed up for reminders!')
+
+# Error Messages
 @bot.command(name='showCourse', help="Show the courses that you are in")
 async def showcourse(ctx):
   courseList = getCourses()
