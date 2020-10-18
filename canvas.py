@@ -27,5 +27,3 @@ def getCourses():
         if (course['term']['name'] == "Autumn 2020"):
             result.append(course['name'])
     return result    
-
-print(getEvents())
