@@ -26,6 +26,4 @@ def getCourses():
     for course in fav_courses:
         if (course['term']['name'] == "Autumn 2020"):
             result.append(course['name'])
-    return result    
-
-print(getEvents())
+    return result
