@@ -1,0 +1,7 @@
+PRAGMA foreign_keys=ON;
+CREATE TABLE Servers(sid INT PRIMARY KEY,
+name VARCHAR(100));
+CREATE TABLE Members(name VARCHAR(100) PRIMARY KEY,
+sid REFERENCES Servers(sid),
+role VARCHAR(100),
+optin INT);
