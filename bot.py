@@ -6,6 +6,8 @@ import discord
 
 from dotenv import load_dotenv
 from discord.ext import commands
+from canvas import getCourses, getEvents
+import discord
 
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
@@ -31,6 +33,29 @@ async def optin(ctx):
   await ctx.author.send('You are signed up for reminders!')
 
 # Error Messages
+@bot.command(name='showCourse', help="Show the courses that you are in")
+async def showcourse(ctx):
+  courseList = getCourses()
+  res = ""
+  for course in courseList:
+    res += "- " + course + "\n"
+  embed = discord.Embed()
+  embed.add_field(name="Current Courses", value=res, inline=False)
+  await ctx.send(embed=embed)
+
+@bot.command(name='events', help="Shows the upcoming events. <input> = OH or Section")
+async def showEvent(ctx, input: str):
+  eventList = getEvents()
+  res = ""
+  if (input.lower() == "oh"):
+    for event in eventList:
+      if ('OH' in event['name'] or 'Office Hours' in event['name']):
+        res += "- " + event['name'] + " " + event['start_time'] + "\n"
+  embed = discord.Embed()
+  embed.add_field(name="Upcoming Events", value=res, inline=False)
+  await ctx.send(embed=embed)
+
+# Incorrect role error message
 @bot.event
 async def on_command_error(ctx, error):
   if isinstance(error, commands.errors.CheckFailure):
