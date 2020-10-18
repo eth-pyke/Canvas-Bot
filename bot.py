@@ -7,6 +7,8 @@ import discord
 from dotenv import load_dotenv
 from discord.ext import commands
 from canvas import getCourses, getEvents
+import asyncio
+from datetime import datetime
 import discord
 
 load_dotenv()
@@ -54,6 +56,38 @@ async def showEvent(ctx, input: str):
   embed = discord.Embed()
   embed.add_field(name="Upcoming Events", value=res, inline=False)
   await ctx.send(embed=embed)
+
+@bot.command(case_insensitive = True, aliases = ["remind", "remindme", "remind_me"])
+async def reminder(ctx, time, reminder):
+    print(time)
+    print(reminder)
+    embed = discord.Embed(color=0x55a7f7, timestamp=datetime.now())
+    seconds = 0
+    if reminder is None:
+        embed.add_field(name='Warning', value='Please specify what do you want me to remind you about.') # Error message
+    if time.lower().endswith("d"):
+        seconds += int(time[:-1]) * 60 * 60 * 24
+        counter = f"{seconds // 60 // 60 // 24} days"
+    if time.lower().endswith("h"):
+        seconds += int(time[:-1]) * 60 * 60
+        counter = f"{seconds // 60 // 60} hours"
+    elif time.lower().endswith("m"):
+        seconds += int(time[:-1]) * 60
+        counter = f"{seconds // 60} minutes"
+    elif time.lower().endswith("s"):
+        seconds += int(time[:-1])
+        counter = f"{seconds} seconds"
+    if seconds == 0:
+        embed.add_field(name='Warning',
+                        value='Please specify a proper duration, send `reminder_help` for more information.')
+    elif seconds > 7776000:
+        embed.add_field(name='Warning', value='You have specified a too long duration!\nMaximum duration is 90 days.')
+    else:
+        await ctx.send(f"Alright, I will remind you about {reminder} in {counter}.")
+        await asyncio.sleep(seconds)
+        await ctx.send(f"Hi, you asked me to remind you about {reminder} {counter} ago.")
+        return
+    await ctx.send(embed=embed)
 
 # Incorrect role error message
 @bot.event
