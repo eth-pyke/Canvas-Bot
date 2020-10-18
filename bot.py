@@ -30,7 +30,7 @@ async def on_disconnect():
   connection.close()
   print(f'{bot.user.name} has shut down.')
 
-
+# When bot first joins and leaves the server
 @bot.event
 async def on_guild_join(guild):
   cursor = connection.cursor()
@@ -38,38 +38,22 @@ async def on_guild_join(guild):
   for member in guild.members:
     cursor = connection.cursor()
     cursor.execute(f"INSERT INTO Members VALUES ('{member}', {member.guild.id}, 0)")
-
 @bot.event
 async def on_guild_remove(guild):
   cursor = connection.cursor()
   cursor.execute(f"DELETE FROM Servers WHERE sid = {guild.id}")
   cursor.execute(f"DELETE FROM Members WHERE sid = {guild.id}")
 
+# When a member first joins and leaves the server
 @bot.event
 async def on_member_join(member):
   cursor = connection.cursor()
   cursor.execute(f"INSERT INTO Members VALUES ('{member}', {member.guild.id}, 0)")
-
 @bot.event
 async def on_member_remove(member):
   cursor = connection.cursor()
   cursor.execute(f"DELETE FROM Members WHERE name = '{member}' AND sid = {member.guild.id})")
 
-# @bot.command(name='join')
-# async def join(ctx):
-#   await ctx.send(f'{ctx.author} {ctx.author.guild.id}')
-#   print(f'{ctx.author} {ctx.author.guild.id}')
-#   cursor = connection.cursor()
-#   cursor.execute(f"INSERT INTO Members VALUES ('{ctx.author}', {ctx.author.guild.id}, 0)")
-#   print("works")
-#   temp = cursor.execute("SELECT * FROM Members").fetchall()
-#   print(temp)
-
-# @bot.command(name='createrole', help='Give yourself the Student Role')
-# async def createrole(ctx, role: str):
-#   await ctx.guild.create_role(name=role)
-
-# @bot.command(case_insensitive = True, aliases = ["remind", "remindme", "remind_me"])
 async def reminder(ctx, time, reminder, ogDate):
     date = datetime.fromtimestamp(time).strftime("%d days, %H hours, and %M minutes")
     await ctx.author.send(f"Alright, I will remind you about {reminder} that is on {ogDate} in {date}.")
@@ -89,6 +73,7 @@ async def optin(ctx):
       seconds = time.timestamp()
       timeDiff = seconds - datetime.now().timestamp()
       reminderList.append(reminder(ctx, timeDiff, event['name'], event['start_time']))
+  await ctx.send("Check your DMs!")
   await asyncio.gather(*reminderList)
 
 @bot.command(name='showCourses', help="Show the courses that you are in")
@@ -127,4 +112,5 @@ async def on_command_error(ctx, error):
   elif isinstance(error, commands.CommandNotFound):
     await ctx.send('This command does not exist. Please use c!help to see valid commands.')
 
+# Run bot
 bot.run(TOKEN)
