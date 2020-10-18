@@ -10,31 +10,71 @@ from canvas import getCourses, getEvents
 import asyncio
 from datetime import datetime
 import discord
+intents = discord.Intents.all()
 
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
 
 # Command prefix
-bot = commands.Bot(command_prefix='c!')
+bot = commands.Bot(command_prefix='c!', intents=intents)
+
+# Connect db
+connection = sqlite3.connect("canvasbot.db")
 
 @bot.event
 async def on_ready():
   print(f'{bot.user.name} has connected to Discord!')
 
-@bot.command(name='david', help='Responds with whether or not you are better than david')
-async def david(ctx):
-  response = f'{ctx.author.name} is better than david'
-  await ctx.send(response)
+@bot.event
+async def on_disconnect():
+  connection.close()
+  print(f'{bot.user.name} has shut down.')
 
-@bot.command(name='createrole', help='Give yourself the Student Role')
-async def createrole(ctx, role: str):
-  await ctx.guild.create_role(name=role)
+
+@bot.event
+async def on_guild_join(guild):
+  cursor = connection.cursor()
+  cursor.execute(f"INSERT INTO Servers VALUES({guild.id},'{guild.name}')")
+  for member in guild.members:
+    cursor = connection.cursor()
+    cursor.execute(f"INSERT INTO Members VALUES ('{member}', {member.guild.id}, 0)")
+
+@bot.event
+async def on_guild_remove(guild):
+  cursor = connection.cursor()
+  cursor.execute(f"DELETE FROM Servers WHERE sid = {guild.id}")
+  cursor.execute(f"DELETE FROM Members WHERE sid = {guild.id}")
+
+@bot.event
+async def on_member_join(member):
+  cursor = connection.cursor()
+  cursor.execute(f"INSERT INTO Members VALUES ('{member}', {member.guild.id}, 0)")
+
+@bot.event
+async def on_member_remove(member):
+  cursor = connection.cursor()
+  cursor.execute(f"DELETE FROM Members WHERE name = '{member}' AND sid = {member.guild.id})")
+
+# @bot.command(name='join')
+# async def join(ctx):
+#   await ctx.send(f'{ctx.author} {ctx.author.guild.id}')
+#   print(f'{ctx.author} {ctx.author.guild.id}')
+#   cursor = connection.cursor()
+#   cursor.execute(f"INSERT INTO Members VALUES ('{ctx.author}', {ctx.author.guild.id}, 0)")
+#   print("works")
+#   temp = cursor.execute("SELECT * FROM Members").fetchall()
+#   print(temp)
+
+# @bot.command(name='createrole', help='Give yourself the Student Role')
+# async def createrole(ctx, role: str):
+#   await ctx.guild.create_role(name=role)
 
 @bot.command(name='optin', help='Opt-In for schedule reminders.')
 async def optin(ctx):
+  cursor = connection.cursor()
+  cursor.execute(f"UPDATE Members SET optin = 1 WHERE name = '{ctx.author}' AND sid = {ctx.author.guild.id}")
   await ctx.author.send('You are signed up for reminders!')
 
-# Error Messages
 @bot.command(name='showCourse', help="Show the courses that you are in")
 async def showcourse(ctx):
   courseList = getCourses()
