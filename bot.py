@@ -65,37 +65,39 @@ async def on_member_remove(member):
 #   temp = cursor.execute("SELECT * FROM Members").fetchall()
 #   print(temp)
 
-# @bot.command(name='createrole', help='Give yourself the Student Role')
-# async def createrole(ctx, role: str):
-#   await ctx.guild.create_role(name=role)
-
 @bot.command(name='optin', help='Opt-In for schedule reminders.')
 async def optin(ctx):
   cursor = connection.cursor()
   cursor.execute(f"UPDATE Members SET optin = 1 WHERE name = '{ctx.author}' AND sid = {ctx.author.guild.id}")
   await ctx.author.send('You are signed up for reminders!')
 
-@bot.command(name='showCourse', help="Show the courses that you are in")
+@bot.command(name='showCourses', help="Show the courses that you are in")
 async def showcourse(ctx):
   courseList = getCourses()
   res = ""
   for course in courseList:
     res += "- " + course + "\n"
-  embed = discord.Embed()
+  embed = discord.Embed(color=0x55a7f7)
   embed.add_field(name="Current Courses", value=res, inline=False)
   await ctx.send(embed=embed)
 
 @bot.command(name='events', help="Shows the upcoming events. <input> = OH or Section")
-async def showEvent(ctx, input: str):
+async def showEvent(ctx, input=None):
+  if input is None:
+    embed = discord.Embed(color=0xff0000)
+    embed.add_field(name="Missing Argument", value="The `<type>` argument is required.\n\n Usage:\
+    Usage: `c!events <OH>`", inline=False)
+    await ctx.send(embed=embed)
+    return
   eventList = getEvents()
   res = ""
   if (input.lower() == "oh"):
     for event in eventList:
       if ('OH' in event['name'] or 'Office Hours' in event['name']):
         res += "- " + event['name'] + " " + event['start_time'] + "\n"
-  embed = discord.Embed()
-  embed.add_field(name="Upcoming Events", value=res, inline=False)
-  await ctx.send(embed=embed)
+    embed = discord.Embed(color=0x55a7f7)
+    embed.add_field(name="Upcoming Events", value=res, inline=False)
+    await ctx.send(embed=embed)
 
 @bot.command(case_insensitive = True, aliases = ["remind", "remindme", "remind_me"])
 async def reminder(ctx, time, reminder):
